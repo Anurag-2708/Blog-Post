@@ -1,0 +1,102 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Category {
+  TECH
+  EDUCATION
+  BUSINESS
+  FINANCE
+  SPORTS
+  GAMES
+  ENTERTAINMENT
+  TRAVEL
+  FOOD
+  HEALTH
+  LIFESTYLE
+  NEWS
+  OPINION
+  MISCELLANEOUS
+}
+
+enum VoteType {
+  UPVOTE
+  DOWNVOTE
+}
+
+model User {
+  id             String @id @default(uuid())
+  username       String @unique
+  avatarUrl      String @default("")
+  bio            String @default("")
+  passwordHashed String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  posts     Post[]
+  comments  Comment[]
+  votes     Vote[]
+  following Follow[]  @relation("following")
+  followers Follow[]  @relation("followers")
+}
+
+model Post {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  category    Category
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id])
+
+  comments Comment[]
+  votes    Vote[]
+}
+
+model Comment {
+  id      String @id @default(uuid())
+  content String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userId String
+  postId String
+  user   User   @relation(fields: [userId], references: [id])
+  post   Post   @relation(fields: [postId], references: [id])
+}
+
+model Vote {
+  id       String   @id @default(uuid())
+  voteType VoteType
+
+  userId String
+  postId String
+  user   User   @relation(fields: [userId], references: [id])
+  post   Post   @relation(fields: [postId], references: [id])
+
+  @@unique([userId, postId])
+}
+
+model Follow {
+  id String @id @default(uuid())
+
+  followerId  String
+  followingId String
+
+  follower  User @relation("following", fields: [followerId], references: [id])
+  following User @relation("followers", fields: [followingId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@unique([followerId, followingId])
+}
